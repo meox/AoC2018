@@ -1,4 +1,8 @@
 defmodule Day1 do
+  @moduledoc """
+  Day1 of AoC 2018.
+  """
+
   def calc_freq do
     load_input()
     |> Enum.reduce(0, fn x, acc ->
@@ -8,6 +12,7 @@ defmodule Day1 do
 
   def twice do
     load_input()
+    |> Stream.cycle
     |> Enum.reduce_while({0, %{}}, fn n, {freq, map} ->
       n_freq = freq + n
       n_map = Map.update(map, n_freq, 1, &(&1 + 1))
@@ -15,7 +20,9 @@ defmodule Day1 do
     end)
   end
 
-  def check_map(freq, map) do
+  ##### PRIVATE #####
+
+  defp check_map(freq, map) do
     if Map.get(map, freq) == 2 do
       {:halt, freq}
     else
@@ -23,7 +30,7 @@ defmodule Day1 do
     end
   end
 
-  def load_input do
+  defp load_input do
     File.stream!("./input.txt")
     |> Enum.map(fn x -> String.trim(x) end)
     |> Enum.filter(fn x ->
@@ -32,6 +39,5 @@ defmodule Day1 do
     |> Enum.map(fn x ->
       String.to_integer(x)
     end)
-    |> Stream.cycle
   end
 end
