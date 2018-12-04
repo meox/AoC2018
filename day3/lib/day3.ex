@@ -4,30 +4,42 @@ defmodule Day3 do
   def calc_space do
   end
 
-  def overlap(claims, cross) where is_array(claims) do
-    Enum.
+  def overlap(claims) when is_list(claims) do
+    claims_map =
+      Enum.reduce(claims, %{}, fn x, acc ->
+        Map.put_new(acc, x.id, x)
+      end)
+
+    ids = Map.keys(claims_map)
+
+    combines =
+      for x <- ids,
+          y <- ids,
+          x != y and x < y,
+          do: {x, y}
+
+    combines
+    |> Enum.reduce(MapSet.new(), fn {idx_a, idx_b}, cross ->
+      claim_a = Map.get(claims_map, idx_a)
+      claim_b = Map.get(claims_map, idx_b)
+      overlap(claim_a, claim_b, cross)
+    end)
   end
 
-  end
   def overlap(%Claim{} = a, %Claim{} = b, cross) do
     cond do
-      a.x + a.w <= b.x ->
-        []
+      a.x + a.w <= b.x || b.x + b.w <= a.x ->
+        cross
 
-      b.x + b.w <= a.x ->
-        []
-
-      a.y + a.h <= b.y ->
-        []
-
-      b.y + b.h <= a.y ->
-        []
+      a.y + a.h <= b.y || b.y + b.h <= a.y ->
+        cross
 
       true ->
-        points(a) |> MapSet.new
-        |> MapSet.intersection(points(b) |> MapSet.new)
-        |> MapSet.intersection(cross |> MapSet.new)
-        |> Enum.to_list()
+        points_a = MapSet.new(points(a))
+        points_b = MapSet.new(points(b))
+
+        MapSet.intersection(points_a, points_b)
+        |> MapSet.union(cross)
     end
   end
 
@@ -38,15 +50,15 @@ defmodule Day3 do
     end
   end
 
-  def parse_line(claim) do
+  def parse_claim(claim) do
     # 1 @ 662,777: 18x27
-    ~r/^\#(\d+) \@ (\d+),(\d+): (\d+)x(\d+)$/
-    |> Regex.run(claim)
-    |> Enum.drop(1)
-    |> Enum.map(fn x ->
-      [id, left, top, w, h] = String.to_integer(x)
-      %Claim{id: id, x: left, y: top, w: w, h: h}
-    end)
+    [id, left, top, w, h] =
+      ~r/^\#(\d+) \@ (\d+),(\d+): (\d+)x(\d+)$/
+      |> Regex.run(claim)
+      |> Enum.drop(1)
+      |> Enum.map(&String.to_integer/1)
+
+    %Claim{id: id, x: left, y: top, w: w, h: h}
   end
 
   defp load_input do
