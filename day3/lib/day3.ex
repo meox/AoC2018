@@ -2,6 +2,24 @@ defmodule Day3 do
   @edge 1000
 
   def calc_space do
+    load_input()
+    |> Enum.map(&parse_claim/1)
+    |> overlap()
+    |> Enum.count()
+  end
+
+  def find_id() do
+    claims = load_input()
+      |> Enum.map(&parse_claim/1)
+
+    overlaps =
+      claims
+      |> overlap()
+
+    claims
+    |> Enum.find(fn c ->
+      MapSet.disjoint?(overlaps, points(c))
+    end)
   end
 
   def overlap(claims) when is_list(claims) do
@@ -35,10 +53,7 @@ defmodule Day3 do
         cross
 
       true ->
-        points_a = MapSet.new(points(a))
-        points_b = MapSet.new(points(b))
-
-        MapSet.intersection(points_a, points_b)
+        MapSet.intersection(points(a), points(b))
         |> MapSet.union(cross)
     end
   end
@@ -48,6 +63,7 @@ defmodule Day3 do
         cy <- y..(y + h - 1) do
       {cx, cy}
     end
+    |> MapSet.new()
   end
 
   def parse_claim(claim) do
